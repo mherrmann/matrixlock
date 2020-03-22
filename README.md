@@ -1,4 +1,4 @@
-# i3lock-matrix
+# matrixlock
 
 ![i3lock-matrix Demo](demo.gif)
 
