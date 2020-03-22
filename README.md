@@ -3,21 +3,20 @@
 ![i3lock-matrix Demo](demo.gif)
 
 The script [matrixlock.py](matrixlock.py) in this repository lets you use the
-Matrix as i3's lock screen. It uses Python 3, _xfce4-terminal_, _cmatrix_ and
-_bash_. You should not find it too difficult to edit the script to use a
-different stack.
+Matrix as i3's lock screen.
 
 ## Requirements
+
+The script currently has the requirements below. You should not find it too
+difficult to edit [matrixlock.py](matrixlock.py) to use a slightly different
+stack, such as a different terminal. If you do do that, please submit a Pull
+Request to share your work with others.
 
  * Python 3.7+
  * Bash
  * Compton
  * xfce4-terminal
  * [cmatrix](https://github.com/abishekvashok/cmatrix)
-
-You should not find it too difficult to edit [matrixlock.py](matrixlock.py) to
-use a slightly different stack, such as a different terminal. If you do do that,
-feel free to submit a Pull Request to share your work with others.
 
 ## Set up
 
