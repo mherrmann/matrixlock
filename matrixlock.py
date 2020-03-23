@@ -36,6 +36,11 @@ def overlay_matrix_on_workspace(ws_num, port, delay):
 	run([
 		'i3-msg',
 		f'workspace {ws_num}; '
+		# There may already be a full-screen app on that workspace.
+		# This would prevent us from showing the Matrix full-screen.
+		# So disable fullscreen first.
+		f'fullscreen disable; '
+		# --color-text=black to hide the cursor when there is a delay.
 		f'exec "xfce4-terminal --hide-scrollbar --hide-menubar --fullscreen --color-text=black '
 		# Send child PID to server so the parent can kill it, then show Matrix:
 		f'-x bash -c \'curl -X POST localhost:{port}/$$ && sleep {delay} && cmatrix -b\'"'
