@@ -15,7 +15,7 @@ def main(matrix_delay_secs):
 	with SubprocessServer(('', 0), len(visible)) as server:
 		port = server.server_address[1]
 		for ws in visible:
-			overlay_matrix_on_workspace(ws['num'], port, matrix_delay_secs)
+			overlay_matrix_on_workspace(ws['name'], port, matrix_delay_secs)
 	run(['i3lock', '-n'], check=True)
 	for pid_path in server.received_posts:
 		assert pid_path.startswith('/'), pid_path
@@ -32,10 +32,10 @@ def get_workspaces():
 	)
 	return json.loads(cp.stdout)
 
-def overlay_matrix_on_workspace(ws_num, port, delay):
+def overlay_matrix_on_workspace(ws_name, port, delay):
 	run([
 		'i3-msg',
-		f'workspace {ws_num}; '
+		f'workspace {ws_name}; '
 		# There may already be a full-screen app on that workspace.
 		# This would prevent us from showing the Matrix full-screen.
 		# So disable fullscreen first.
