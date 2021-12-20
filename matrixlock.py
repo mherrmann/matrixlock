@@ -9,14 +9,19 @@ from time import time
 
 import json
 
-def main(matrix_delay_secs):
+def main(matrix_delay_secs, terminal, locker):
 	workspaces = get_workspaces()
 	visible = [ws for ws in workspaces if ws['visible']]
 	with SubprocessServer(('', 0), len(visible)) as server:
 		port = server.server_address[1]
 		for ws in visible:
-			overlay_matrix_on_workspace(ws['name'], port, matrix_delay_secs)
-	run(['i3lock', '-n'], check=True)
+			overlay_matrix_on_workspace(ws['name'], port, matrix_delay_secs, terminal, len(visible))
+
+	if locker == 'xtrlock':
+		run(['xtrlock'], check=True)
+	else:
+		run(['i3lock', '-n'], check=True)
+
 	for pid_path in server.received_posts:
 		assert pid_path.startswith('/'), pid_path
 		try:
@@ -32,18 +37,30 @@ def get_workspaces():
 	)
 	return json.loads(cp.stdout)
 
-def overlay_matrix_on_workspace(ws_name, port, delay):
+def overlay_matrix_on_workspace(ws_name, port, delay, terminal, visible_wss):
+	# Send child PID to server so the parent can kill it, then show Matrix:
+	pid_server_command = f'bash -c \'curl -X POST localhost:{port}/$$ && sleep {delay} && cmatrix -b\''
+
+	# terminal command
+	terminal_command = f'exec "xfce4-terminal --hide-scrollbar --hide-menubar --fullscreen --color-text=black -x {pid_server_command}"'
+	if terminal == 'urxvt':
+		# in order to this to be fullscreen add the following line in .i3/conf file:
+		# for_window [instance="^matrixlock$"] fullscreen
+		terminal_command = f'exec "urxvt -bg Black -name matrixlock -e {pid_server_command}"'
+
+	# workspace command (if one ws visible we don't want to change)
+	workspace_command = ''
+	if visible_wss > 1:
+		workspace_command = f'workspace {ws_name}; '
 	run([
 		'i3-msg',
-		f'workspace {ws_name}; '
+		f'{workspace_command} '
 		# There may already be a full-screen app on that workspace.
 		# This would prevent us from showing the Matrix full-screen.
 		# So disable fullscreen first.
 		f'fullscreen disable; '
 		# --color-text=black to hide the cursor when there is a delay.
-		f'exec "xfce4-terminal --hide-scrollbar --hide-menubar --fullscreen --color-text=black '
-		# Send child PID to server so the parent can kill it, then show Matrix:
-		f'-x bash -c \'curl -X POST localhost:{port}/$$ && sleep {delay} && cmatrix -b\'"'
+		f'{terminal_command} '
 	], check=True, stdout=DEVNULL)
 
 class SubprocessServer(HTTPServer):
@@ -94,5 +111,11 @@ if __name__ == '__main__':
 		'delay', type=int, nargs='?', default=0,
 		help='Seconds between blanking out the screen and starting the Matrix'
 	)
+	parser.add_argument(
+		'--locker',help='The locker to use', default='i3lock'
+	)
+	parser.add_argument(
+		'--terminal',help='The terminal to use (if using uxrvt, please set the instance to be fullscreen in conf)', default='xfce4-terminal'
+	)
 	args = parser.parse_args()
-	main(args.delay)
+	main(args.delay,args.terminal,args.locker)
